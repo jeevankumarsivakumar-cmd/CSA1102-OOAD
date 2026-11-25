@@ -1,0 +1,65 @@
+{
+  "model_name": "Random Forest Classifier",
+  "version": "1.0.0",
+  "dataset_size": 1500,
+  "train_samples": 1200,
+  "test_samples": 300,
+  "features": [
+    "attendance_percentage",
+    "absence_count",
+    "internal_marks",
+    "previous_gpa"
+  ],
+  "accuracy": 86.0,
+  "precision_macro": 85.59,
+  "recall_macro": 74.21,
+  "f1_macro": 77.84,
+  "per_class_metrics": {
+    "Average Performance": {
+      "precision": 89.16,
+      "recall": 86.05,
+      "f1_score": 87.57,
+      "support": 172
+    },
+    "Good Performance": {
+      "precision": 81.89,
+      "recall": 90.43,
+      "f1_score": 85.95,
+      "support": 115
+    },
+    "Needs Improvement": {
+      "precision": 85.71,
+      "recall": 46.15,
+      "f1_score": 60.0,
+      "support": 13
+    }
+  },
+  "feature_importance": {
+    "attendance_percentage": 20.71,
+    "absence_count": 8.58,
+    "internal_marks": 50.58,
+    "previous_gpa": 20.13
+  },
+  "confusion_matrix": [
+    [
+      148,
+      23,
+      1
+    ],
+    [
+      11,
+      104,
+      0
+    ],
+    [
+      7,
+      0,
+      6
+    ]
+  ],
+  "classes": [
+    "Average Performance",
+    "Good Performance",
+    "Needs Improvement"
+  ]
+}

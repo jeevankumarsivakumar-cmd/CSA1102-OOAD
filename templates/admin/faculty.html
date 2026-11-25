@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Faculty Management{% endblock %}
+{% block page_title %}Faculty Management{% endblock %}
+{% block page_subtitle %}Professors, Instructors & Academic Departments{% endblock %}
+
+{% block content %}
+<div class="card mb-4">
+    <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h6 class="fw-bold mb-0 text-dark">Faculty Directory</h6>
+                <small class="text-muted">Total {{ faculty|length }} registered faculty members</small>
+            </div>
+            <button type="button" class="btn btn-primary-gradient" data-bs-toggle="modal" data-bs-target="#addFacultyModal">
+                <i class="bi bi-person-plus-fill me-1"></i> Add Faculty Member
+            </button>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-custom align-middle">
+                <thead>
+                    <tr>
+                        <th>Employee ID</th>
+                        <th>Name & Title</th>
+                        <th>Department</th>
+                        <th>Designation</th>
+                        <th>Qualification & Specialization</th>
+                        <th>Contact</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for f in faculty %}
+                    <tr>
+                        <td>
+                            <span class="fw-bold font-monospace text-dark">{{ f.employee_id }}</span>
+                        </td>
+                        <td>
+                            <div class="fw-semibold text-dark">{{ f.full_name }}</div>
+                            <small class="text-muted">{{ f.email }}</small>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark border">{{ f.department }}</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle">{{ f.designation }}</span>
+                        </td>
+                        <td>
+                            <div class="small fw-semibold text-dark">{{ f.qualification or 'N/A' }}</div>
+                            <small class="text-muted">{{ f.specialization or '' }}</small>
+                        </td>
+                        <td>
+                            <small class="text-muted">{{ f.phone or 'N/A' }}</small>
+                        </td>
+                        <td class="text-end">
+                            <form method="POST" action="{{ url_for('admin.faculty') }}" class="d-inline" onsubmit="return confirm('Remove faculty {{ f.full_name }}?');">
+                                <input type="hidden" name="action" value="delete">
+                                <input type="hidden" name="faculty_table_id" value="{{ f.id }}">
+                                <button type="submit" class="btn btn-sm btn-outline-custom text-danger" title="Remove Faculty">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ADD FACULTY MODAL -->
+<div class="modal fade" id="addFacultyModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <form method="POST" action="{{ url_for('admin.faculty') }}">
+                <input type="hidden" name="action" value="create">
+                <div class="modal-header border-0 pb-0 px-4 pt-4">
+                    <h5 class="modal-title fw-bold">Add Teaching Faculty</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Full Name *</label>
+                            <input type="text" name="full_name" class="form-control" placeholder="e.g. Dr. Suresh Bhatt" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Username *</label>
+                            <input type="text" name="username" class="form-control" placeholder="e.g. suresh.b" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">University Email *</label>
+                            <input type="email" name="email" class="form-control" placeholder="faculty@university.edu" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Initial Password *</label>
+                            <input type="text" name="password" value="faculty123" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Department *</label>
+                            <select name="department" class="form-select" required>
+                                {% for d in departments %}
+                                    <option value="{{ d }}">{{ d }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Designation *</label>
+                            <select name="designation" class="form-select" required>
+                                <option value="Professor">Professor</option>
+                                <option value="Associate Professor">Associate Professor</option>
+                                <option value="Assistant Professor" selected>Assistant Professor</option>
+                                <option value="Adjunct Lecturer">Adjunct Lecturer</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Qualification</label>
+                            <input type="text" name="qualification" class="form-control" placeholder="Ph.D in Computer Science">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Specialization</label>
+                            <input type="text" name="specialization" class="form-control" placeholder="Distributed Computing & AI">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Phone Number</label>
+                            <input type="text" name="phone" class="form-control" placeholder="+91 98111 22233">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary-gradient px-4">Register Faculty</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In{% endblock %}
+
+{% block public_content %}
+<div class="login-split-page">
+    <!-- LEFT HERO BRAND PANEL -->
+    <div class="login-hero-panel">
+        <div>
+            <div class="d-flex align-items-center gap-3 mb-4">
+                <div class="brand-logo-icon" style="width: 48px; height: 48px; font-size: 1.5rem;">
+                    <i class="bi bi-mortarboard-fill"></i>
+                </div>
+                <div>
+                    <h4 class="mb-0 fw-bold text-white tracking-tight">EduIntellect AI</h4>
+                    <span class="text-white-50" style="font-size: 0.85rem;">Autonomous Attendance & Predictive Analytics</span>
+                </div>
+            </div>
+            
+            <div class="badge bg-white bg-opacity-10 text-white border border-white border-opacity-20 px-3 py-2 rounded-pill mb-4">
+                <i class="bi bi-stars text-warning me-1"></i> Powered by Scikit-Learn Random Forest ML
+            </div>
+
+            <h1 class="display-6 fw-bold mb-3 text-white">Smart Attendance & Academic Risk Prediction Platform</h1>
+            <p class="text-white-50 lead fs-6 mb-4">
+                An enterprise-grade academic platform integrating automated attendance logging, 
+                instant low-attendance debarment alerts (<75%), and machine learning classification to prevent academic dropouts.
+            </p>
+
+            <div class="row g-3 mt-2">
+                <div class="col-sm-6">
+                    <div class="p-3 rounded-4 bg-white bg-opacity-10 border border-white border-opacity-10">
+                        <i class="bi bi-shield-check text-success fs-4 mb-2 d-block"></i>
+                        <h6 class="text-white fw-semibold mb-1">Role-Based Access</h6>
+                        <small class="text-white-50">Dedicated workflows for Admin, Faculty & Students.</small>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="p-3 rounded-4 bg-white bg-opacity-10 border border-white border-opacity-10">
+                        <i class="bi bi-cpu text-info fs-4 mb-2 d-block"></i>
+                        <h6 class="text-white fw-semibold mb-1">AI Risk Profiling</h6>
+                        <small class="text-white-50">Early warning system based on multi-parameter metrics.</small>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="p-3 rounded-4 bg-white bg-opacity-10 border border-white border-opacity-10">
+                        <i class="bi bi-bell text-warning fs-4 mb-2 d-block"></i>
+                        <h6 class="text-white fw-semibold mb-1">Automated Warnings</h6>
+                        <small class="text-white-50">Automated absence triggers & <75% attendance alerts.</small>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="p-3 rounded-4 bg-white bg-opacity-10 border border-white border-opacity-10">
+                        <i class="bi bi-diagram-3 text-primary fs-4 mb-2 d-block"></i>
+                        <h6 class="text-white fw-semibold mb-1">OOAD Architecture</h6>
+                        <small class="text-white-50">Modular MVC, 3NF schema, Encapsulation & Polymorphism.</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="pt-4 border-top border-white border-opacity-10 text-white-50 d-flex justify-content-between align-items-center" style="font-size: 0.8rem;">
+            <span>College Capstone Project Demonstration</span>
+            <span>MySQL / SQLite Dual Engine</span>
+        </div>
+    </div>
+
+    <!-- RIGHT AUTHENTICATION PANEL -->
+    <div class="login-form-panel">
+        <div class="login-card-inner">
+            <div class="text-center mb-4">
+                <div class="brand-logo-icon mx-auto mb-3 d-lg-none" style="width: 44px; height: 44px;">
+                    <i class="bi bi-mortarboard-fill"></i>
+                </div>
+                <h3 class="fw-bold text-dark mb-1">Portal Sign In</h3>
+                <p class="text-muted small">Select a demo role below or enter your credentials</p>
+            </div>
+
+            <!-- Toast / Flash messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="mb-3">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} alert-dismissible fade show rounded-3 p-2 small d-flex align-items-center gap-2" role="alert">
+                                <i class="bi bi-info-circle-fill"></i>
+                                <div>{{ message }}</div>
+                                <button type="button" class="btn-close p-2" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <!-- QUICK DEMO PRESET SELECTORS -->
+            <div class="mb-4">
+                <label class="form-label text-muted small fw-bold text-uppercase mb-2">1-Click Demo Evaluation Credentials</label>
+                <div class="row g-2">
+                    <div class="col-6">
+                        <button type="button" class="quick-role-btn" data-role="admin">
+                            <i class="bi bi-shield-lock-fill text-danger fs-5"></i>
+                            <div>
+                                <div class="fw-bold text-dark small">Dean / Admin</div>
+                                <div class="text-muted" style="font-size: 0.70rem;">admin / admin123</div>
+                            </div>
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <button type="button" class="quick-role-btn" data-role="faculty">
+                            <i class="bi bi-person-video3 text-primary fs-5"></i>
+                            <div>
+                                <div class="fw-bold text-dark small">HOD / Faculty</div>
+                                <div class="text-muted" style="font-size: 0.70rem;">faculty1 / faculty123</div>
+                            </div>
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <button type="button" class="quick-role-btn" data-role="student">
+                            <i class="bi bi-mortarboard text-success fs-5"></i>
+                            <div>
+                                <div class="fw-bold text-dark small">Student (Good)</div>
+                                <div class="text-muted" style="font-size: 0.70rem;">student1 / student123</div>
+                            </div>
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <button type="button" class="quick-role-btn" data-role="student_risk">
+                            <i class="bi bi-exclamation-diamond-fill text-warning fs-5"></i>
+                            <div>
+                                <div class="fw-bold text-dark small">Student (At Risk)</div>
+                                <div class="text-muted" style="font-size: 0.70rem;">student3 / student123</div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LOGIN FORM -->
+            <form action="{{ url_for('auth.login') }}" method="POST">
+                <div class="mb-3">
+                    <label for="identifier" class="form-label fw-semibold small text-dark">Username or Email</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-person"></i></span>
+                        <input type="text" class="form-control border-start-0 ps-0" id="identifier" name="identifier" 
+                               placeholder="e.g. admin or faculty1" required autofocus>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label for="password" class="form-label fw-semibold small text-dark mb-0">Password</label>
+                    </div>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-lock"></i></span>
+                        <input type="password" class="form-control border-start-0 ps-0" id="password" name="password" 
+                               placeholder="Enter your password" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary-gradient w-100 py-2 mb-3">
+                    <i class="bi bi-box-arrow-in-right me-1"></i> Sign In to System
+                </button>
+            </form>
+
+            <div class="p-3 rounded-3 bg-light text-center small text-muted">
+                <i class="bi bi-info-circle me-1 text-primary"></i> 
+                Select a preset button above to instantly autofill and test all 3 roles.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

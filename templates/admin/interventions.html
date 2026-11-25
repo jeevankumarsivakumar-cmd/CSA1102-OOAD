@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}Institutional Mentoring & Interventions Oversight{% endblock %}
+{% block page_title %}Faculty Interventions Oversight{% endblock %}
+{% block page_subtitle %}Campus-Wide Academic Counseling Activities, Remedial Task Tracking & Resolution Rates{% endblock %}
+
+{% block content %}
+<!-- SUMMARY CARDS -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card p-3 border-0 shadow-sm bg-white">
+            <small class="text-muted text-uppercase fw-bold">Total Interventions</small>
+            <div class="fs-2 fw-bold text-dark">{{ tot_interventions }}</div>
+            <small class="text-muted">Recorded institutional cases</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3 border-0 shadow-sm bg-white">
+            <small class="text-muted text-uppercase fw-bold">Pending Student Action</small>
+            <div class="fs-2 fw-bold text-secondary">{{ pending_count }}</div>
+            <small class="text-muted">Awaiting initial task work</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3 border-0 shadow-sm bg-white">
+            <small class="text-muted text-uppercase fw-bold">In Progress</small>
+            <div class="fs-2 fw-bold text-warning">{{ in_progress_count }}</div>
+            <small class="text-warning">Active remedial monitoring</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3 border-0 shadow-sm bg-white">
+            <small class="text-muted text-uppercase fw-bold">Resolved / Completed</small>
+            <div class="fs-2 fw-bold text-success">{{ completed_count }}</div>
+            <small class="text-success">
+                {% if tot_interventions > 0 %}
+                    {{ ((completed_count / tot_interventions) * 100)|round(1) }}% resolution rate
+                {% else %}
+                    0% resolution rate
+                {% endif %}
+            </small>
+        </div>
+    </div>
+</div>
+
+<!-- INTERVENTIONS TABLE -->
+<div class="card border-0 shadow-sm p-4 mb-4">
+    <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+        <div>
+            <h6 class="fw-bold text-dark mb-0">Institutional Mentoring Directory</h6>
+            <small class="text-muted">Review counseling logs across all engineering departments and faculty guides</small>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{{ url_for('admin.interventions') }}" class="btn btn-sm {% if not status_filter %}btn-primary{% else %}btn-outline-secondary{% endif %} rounded-pill px-3">
+                All ({{ tot_interventions }})
+            </a>
+            <a href="{{ url_for('admin.interventions', status='In Progress') }}" class="btn btn-sm {% if status_filter == 'In Progress' %}btn-warning text-dark{% else %}btn-outline-warning text-dark{% endif %} rounded-pill px-3">
+                In Progress ({{ in_progress_count }})
+            </a>
+            <a href="{{ url_for('admin.interventions', status='Completed') }}" class="btn btn-sm {% if status_filter == 'Completed' %}btn-success{% else %}btn-outline-success{% endif %} rounded-pill px-3">
+                Completed ({{ completed_count }})
+            </a>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Date</th>
+                    <th>Student Details</th>
+                    <th>Faculty Mentor</th>
+                    <th>Class / Dept</th>
+                    <th>Status</th>
+                    <th>Mentoring Summary & Assigned Tasks</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for inv in interventions %}
+                <tr>
+                    <td class="small">{{ inv.mentoring_date }}</td>
+                    <td>
+                        <strong>{{ inv.student_name }}</strong>
+                        <div class="font-monospace small text-muted">{{ inv.student_code }}</div>
+                    </td>
+                    <td>
+                        <span class="badge bg-light text-primary border"><i class="bi bi-person-badge me-1"></i>{{ inv.faculty_name }}</span>
+                    </td>
+                    <td>
+                        <div><strong class="small">{{ inv.class_code }}</strong></div>
+                        <small class="text-muted">{{ inv.department }}</small>
+                    </td>
+                    <td>
+                        <span class="badge {% if inv.status == 'Completed' %}bg-success{% elif inv.status == 'In Progress' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                            {{ inv.status }}
+                        </span>
+                    </td>
+                    <td style="max-width: 340px;">
+                        <div class="small text-dark mb-1"><strong>Notes:</strong> {{ inv.mentoring_notes }}</div>
+                        {% if inv.assigned_tasks %}
+                        <div class="small text-muted"><strong>Tasks:</strong> {{ inv.assigned_tasks }}</div>
+                        {% endif %}
+                        {% if inv.outcome_notes %}
+                        <div class="small text-success mt-1"><strong>Outcome:</strong> {{ inv.outcome_notes }}</div>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="text-center py-4 text-muted">
+                        No faculty mentoring records found matching criteria.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

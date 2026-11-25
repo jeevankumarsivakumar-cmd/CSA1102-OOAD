@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Faculty Alert Center{% endblock %}
+{% block page_title %}Faculty Notification & Alert Center{% endblock %}
+{% block page_subtitle %}Live Feed of Student Attendance Drop Warnings, Academic Risk Triggers & Course Milestones{% endblock %}
+
+{% block content %}
+<!-- SUMMARY CARDS -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card p-3 border-0 shadow-sm bg-white">
+            <small class="text-muted text-uppercase fw-bold">Active Student Alerts</small>
+            <div class="fs-2 fw-bold text-danger">{{ student_alerts|length }}</div>
+            <small class="text-danger">In your assigned classes</small>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-3 border-0 shadow-sm bg-white">
+            <small class="text-muted text-uppercase fw-bold">Low Attendance Alerts</small>
+            <div class="fs-2 fw-bold text-warning">
+                {{ student_alerts|selectattr('category', 'in', ['Low Attendance Warning', 'Approaching Threshold'])|list|length }}
+            </div>
+            <small class="text-muted">Threshold risks</small>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-3 border-0 shadow-sm bg-white">
+            <small class="text-muted text-uppercase fw-bold">Department Notices</small>
+            <div class="fs-2 fw-bold text-primary">{{ personal_notifs|length }}</div>
+            <small class="text-muted">Faculty broadcast messages</small>
+        </div>
+    </div>
+</div>
+
+<!-- STUDENT ALERTS FEED -->
+<div class="card border-0 shadow-sm p-4 mb-4">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <div>
+            <h6 class="fw-bold text-dark mb-0">Student Academic & Attendance Alerts</h6>
+            <small class="text-muted">Real-time alerts automatically dispatched when students drop below 75% or display score decline</small>
+        </div>
+        <a href="{{ url_for('faculty.interventions') }}" class="btn btn-sm btn-primary rounded-pill px-3">
+            <i class="bi bi-person-workspace me-1"></i>Open Intervention Center
+        </a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Student Details</th>
+                    <th>Category</th>
+                    <th>Alert Title & Description</th>
+                    <th>Priority</th>
+                    <th class="text-end">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in student_alerts %}
+                <tr>
+                    <td class="small">{{ a.created_at[:16] if a.created_at else '' }}</td>
+                    <td>
+                        <strong>{{ a.student_name }}</strong>
+                        <div class="font-monospace small text-muted">{{ a.student_code }} ({{ a.class_code }})</div>
+                    </td>
+                    <td>
+                        <span class="badge {% if a.category == 'Low Attendance Warning' %}bg-danger-subtle text-danger{% elif a.category == 'Approaching Threshold' %}bg-warning-subtle text-warning{% elif a.category == 'Declining Marks' %}bg-danger-subtle text-danger{% else %}bg-secondary-subtle text-secondary{% endif %}">
+                            {{ a.category }}
+                        </span>
+                    </td>
+                    <td style="max-width: 350px;">
+                        <strong class="d-block small text-dark">{{ a.title }}</strong>
+                        <p class="small text-muted mb-0">{{ a.message }}</p>
+                    </td>
+                    <td>
+                        <span class="badge {% if a.priority == 'High' %}bg-danger{% elif a.priority == 'Medium' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                            {{ a.priority }}
+                        </span>
+                    </td>
+                    <td class="text-end">
+                        <a href="{{ url_for('faculty.interventions') }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                            Mentor
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="text-center py-4 text-muted">
+                        No critical student alerts active in your classes.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Smart Attendance & Academic Analytics{% endblock %} | AI Academic System</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <!-- Custom Design System -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+{% if session.get('user_id') %}
+<div id="wrapper">
+    <!-- SIDEBAR NAVIGATION -->
+    <aside id="sidebar">
+        <div class="sidebar-header">
+            <div class="d-flex align-items-center gap-2">
+                <div class="brand-logo-icon">
+                    <i class="bi bi-mortarboard-fill"></i>
+                </div>
+                <div>
+                    <h6 class="mb-0 fw-bold text-white tracking-tight" style="font-size: 0.95rem;">EduIntellect AI</h6>
+                    <span class="text-white-50" style="font-size: 0.70rem;">Attendance & Analytics</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar-nav">
+            {% if active_role == 'admin' %}
+                <div class="nav-section-title">Core Management</div>
+                <a href="{{ url_for('admin.dashboard') }}" class="sidebar-link {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
+                    <i class="bi bi-grid-1x2-fill"></i>
+                    <span>Admin Dashboard</span>
+                </a>
+                <a href="{{ url_for('admin.students') }}" class="sidebar-link {% if request.endpoint == 'admin.students' %}active{% endif %}">
+                    <i class="bi bi-people-fill"></i>
+                    <span>Student Management</span>
+                </a>
+                <a href="{{ url_for('admin.faculty') }}" class="sidebar-link {% if request.endpoint == 'admin.faculty' %}active{% endif %}">
+                    <i class="bi bi-person-badge-fill"></i>
+                    <span>Faculty Management</span>
+                </a>
+                <a href="{{ url_for('admin.classes') }}" class="sidebar-link {% if request.endpoint == 'admin.classes' %}active{% endif %}">
+                    <i class="bi bi-building-fill"></i>
+                    <span>Classes & Subjects</span>
+                </a>
+                <a href="{{ url_for('admin.timetable') }}" class="sidebar-link {% if request.endpoint == 'admin.timetable' %}active{% endif %}">
+                    <i class="bi bi-calendar3-week-fill"></i>
+                    <span>Timetable Schedule</span>
+                </a>
+                <a href="{{ url_for('admin.interventions') }}" class="sidebar-link {% if request.endpoint == 'admin.interventions' %}active{% endif %}">
+                    <i class="bi bi-person-workspace text-primary"></i>
+                    <span>Mentoring Oversight</span>
+                </a>
+
+                <div class="nav-section-title">Intelligence & Reports</div>
+                <a href="{{ url_for('analytics.ai_dashboard') }}" class="sidebar-link {% if request.endpoint == 'analytics.ai_dashboard' %}active{% endif %}">
+                    <i class="bi bi-cpu-fill text-warning"></i>
+                    <span>AI Performance Risk</span>
+                </a>
+                <a href="{{ url_for('admin.notifications') }}" class="sidebar-link {% if request.endpoint == 'admin.notifications' %}active{% endif %}">
+                    <i class="bi bi-bell-fill text-danger"></i>
+                    <span>Campus Alerts</span>
+                </a>
+                <a href="{{ url_for('report.index') }}" class="sidebar-link {% if request.endpoint == 'report.index' %}active{% endif %}">
+                    <i class="bi bi-file-earmark-bar-graph-fill"></i>
+                    <span>Reports & Exports</span>
+                </a>
+
+            {% elif active_role == 'faculty' %}
+                <div class="nav-section-title">Faculty Portal</div>
+                <a href="{{ url_for('faculty.dashboard') }}" class="sidebar-link {% if request.endpoint == 'faculty.dashboard' %}active{% endif %}">
+                    <i class="bi bi-speedometer2"></i>
+                    <span>Faculty Dashboard</span>
+                </a>
+                <a href="{{ url_for('faculty.attendance') }}" class="sidebar-link {% if request.endpoint == 'faculty.attendance' %}active{% endif %}">
+                    <i class="bi bi-check2-square text-success"></i>
+                    <span>Record Attendance</span>
+                </a>
+                <a href="{{ url_for('faculty.marks') }}" class="sidebar-link {% if request.endpoint == 'faculty.marks' %}active{% endif %}">
+                    <i class="bi bi-journal-check text-info"></i>
+                    <span>Internal Exam Marks</span>
+                </a>
+                <a href="{{ url_for('faculty.interventions') }}" class="sidebar-link {% if request.endpoint == 'faculty.interventions' %}active{% endif %}">
+                    <i class="bi bi-person-workspace text-primary"></i>
+                    <span>Intervention Center</span>
+                </a>
+                <a href="{{ url_for('faculty.analytics') }}" class="sidebar-link {% if request.endpoint == 'faculty.analytics' %}active{% endif %}">
+                    <i class="bi bi-graph-up-arrow"></i>
+                    <span>Class Analytics</span>
+                </a>
+
+                <div class="nav-section-title">Reports & AI</div>
+                <a href="{{ url_for('analytics.ai_dashboard') }}" class="sidebar-link {% if request.endpoint == 'analytics.ai_dashboard' %}active{% endif %}">
+                    <i class="bi bi-cpu-fill text-warning"></i>
+                    <span>AI Risk Predictor</span>
+                </a>
+                <a href="{{ url_for('faculty.notifications') }}" class="sidebar-link {% if request.endpoint == 'faculty.notifications' %}active{% endif %}">
+                    <i class="bi bi-bell-fill text-danger"></i>
+                    <span>Alert Center</span>
+                </a>
+                <a href="{{ url_for('report.index') }}" class="sidebar-link {% if request.endpoint == 'report.index' %}active{% endif %}">
+                    <i class="bi bi-file-earmark-bar-graph-fill"></i>
+                    <span>Class Reports</span>
+                </a>
+
+            {% elif active_role == 'student' %}
+                <div class="nav-section-title">Student Portal</div>
+                <a href="{{ url_for('student.dashboard') }}" class="sidebar-link {% if request.endpoint == 'student.dashboard' %}active{% endif %}">
+                    <i class="bi bi-person-circle"></i>
+                    <span>My Dashboard</span>
+                </a>
+                <a href="{{ url_for('student.recovery_planner') }}" class="sidebar-link {% if request.endpoint == 'student.recovery_planner' %}active{% endif %}">
+                    <i class="bi bi-calculator-fill text-info"></i>
+                    <span>Recovery Planner</span>
+                </a>
+                <a href="{{ url_for('student.improvement_plan') }}" class="sidebar-link {% if request.endpoint == 'student.improvement_plan' %}active{% endif %}">
+                    <i class="bi bi-compass-fill text-primary"></i>
+                    <span>Improvement Plan</span>
+                </a>
+                <a href="{{ url_for('student.performance_journey') }}" class="sidebar-link {% if request.endpoint == 'student.performance_journey' %}active{% endif %}">
+                    <i class="bi bi-graph-up-arrow text-warning"></i>
+                    <span>Performance Journey</span>
+                </a>
+                <a href="{{ url_for('student.attendance') }}" class="sidebar-link {% if request.endpoint == 'student.attendance' %}active{% endif %}">
+                    <i class="bi bi-calendar-check-fill text-success"></i>
+                    <span>My Attendance</span>
+                </a>
+                <a href="{{ url_for('student.marks') }}" class="sidebar-link {% if request.endpoint == 'student.marks' %}active{% endif %}">
+                    <i class="bi bi-award-fill text-warning"></i>
+                    <span>Academic Marks</span>
+                </a>
+                <a href="{{ url_for('student.notification_center') }}" class="sidebar-link {% if request.endpoint == 'student.notification_center' or request.endpoint == 'student.notifications' %}active{% endif %}">
+                    <i class="bi bi-bell-fill"></i>
+                    <span>Notification Center</span>
+                    {% if unread_notif_count > 0 %}
+                        <span class="badge bg-danger rounded-pill ms-auto">{{ unread_notif_count }}</span>
+                    {% endif %}
+                </a>
+            {% endif %}
+        </div>
+
+        <div class="sidebar-footer">
+            <div class="d-flex align-items-center justify-content-between p-2 rounded-3 bg-white bg-opacity-10">
+                <div class="d-flex align-items-center gap-2 overflow-hidden">
+                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-size: 0.85rem; font-weight: bold;">
+                        {{ session.get('full_name', 'User')[:1] }}
+                    </div>
+                    <div class="overflow-hidden">
+                        <div class="text-white text-truncate fw-semibold" style="font-size: 0.825rem;">{{ session.get('full_name') }}</div>
+                        <span class="badge-role {{ active_role }}">{{ active_role }}</span>
+                    </div>
+                </div>
+                <a href="{{ url_for('auth.logout') }}" class="text-white-50 hover-white text-decoration-none" title="Sign out">
+                    <i class="bi bi-box-arrow-right fs-5"></i>
+                </a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- CONTENT WRAPPER -->
+    <div id="content-wrapper">
+        <!-- TOP NAVBAR -->
+        <header class="top-navbar">
+            <div class="d-flex align-items-center gap-3">
+                <button class="btn btn-sm btn-outline-custom d-lg-none" id="sidebarToggle">
+                    <i class="bi bi-list fs-5"></i>
+                </button>
+                <div class="d-none d-md-block">
+                    <h5 class="mb-0 fw-bold text-dark">{% block page_title %}Dashboard{% endblock %}</h5>
+                    <small class="text-muted">{% block page_subtitle %}AI-Powered Student Attendance and Academic Analytics{% endblock %}</small>
+                </div>
+            </div>
+
+            <div class="d-flex align-items-center gap-3">
+                <!-- DB Engine Badge -->
+                <span class="badge bg-light text-secondary border px-2 py-1 d-none d-sm-inline-flex align-items-center gap-1" title="Active Database Connection">
+                    <i class="bi bi-database-fill text-primary"></i> DB: <strong>{{ db_engine }}</strong>
+                </span>
+
+                <!-- Notifications Dropdown (for student/all) -->
+                {% if active_role == 'student' %}
+                <a href="{{ url_for('student.notifications') }}" class="btn btn-light position-relative rounded-circle p-2" title="Notifications">
+                    <i class="bi bi-bell text-secondary fs-5"></i>
+                    {% if unread_notif_count > 0 %}
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                        {{ unread_notif_count }}
+                    </span>
+                    {% endif %}
+                </a>
+                {% endif %}
+
+                <!-- User Dropdown Pill -->
+                <div class="dropdown">
+                    <button class="btn btn-light border-0 d-flex align-items-center gap-2 px-2 py-1 rounded-pill" data-bs-toggle="dropdown">
+                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-weight: 600;">
+                            {{ session.get('full_name', 'U')[:1] }}
+                        </div>
+                        <span class="d-none d-md-inline fw-semibold text-dark" style="font-size: 0.85rem;">{{ session.get('full_name') }}</span>
+                        <i class="bi bi-chevron-down text-muted" style="font-size: 0.75rem;"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3 mt-2">
+                        <li><h6 class="dropdown-header">{{ session.get('email') }}</h6></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item text-danger d-flex align-items-center gap-2" href="{{ url_for('auth.logout') }}">
+                                <i class="bi bi-box-arrow-right"></i> Sign Out
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </header>
+
+        <!-- MAIN CONTENT CONTAINER -->
+        <main class="p-4 flex-grow-1">
+            <!-- Toast & Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="mb-4">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} alert-dismissible fade show rounded-3 shadow-sm d-flex align-items-center gap-2" role="alert">
+                                {% if category == 'success' %}
+                                    <i class="bi bi-check-circle-fill fs-5 text-success"></i>
+                                {% elif category == 'danger' %}
+                                    <i class="bi bi-exclamation-triangle-fill fs-5 text-danger"></i>
+                                {% elif category == 'warning' %}
+                                    <i class="bi bi-exclamation-circle-fill fs-5 text-warning"></i>
+                                {% else %}
+                                    <i class="bi bi-info-circle-fill fs-5 text-info"></i>
+                                {% endif %}
+                                <div class="flex-grow-1">{{ message }}</div>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </main>
+
+        <footer class="p-3 text-center text-muted border-top bg-white" style="font-size: 0.8rem;">
+            AI-Powered Student Attendance and Academic Analytics System &bull; OOAD Capstone Project
+        </footer>
+    </div>
+</div>
+{% else %}
+    <!-- Public / Login View Layout -->
+    {% block public_content %}{% endblock %}
+{% endif %}
+
+<!-- Bootstrap 5 Bundle JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Main Application Script -->
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block extra_scripts %}{% endblock %}
+</body>
+</html>

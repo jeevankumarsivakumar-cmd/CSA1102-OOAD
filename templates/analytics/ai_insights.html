@@ -1,0 +1,346 @@
+{% extends "base.html" %}
+
+{% block title %}AI Performance Prediction & Risk Classification{% endblock %}
+{% block page_title %}AI Performance Prediction Engine{% endblock %}
+{% block page_subtitle %}Scikit-Learn Machine Learning Pipeline, Predictive Risk Classification & Student Support{% endblock %}
+
+{% block content %}
+<!-- SCIKIT-LEARN MODEL EVALUATION BANNER -->
+<div class="card mb-4 border-0 shadow-sm" style="background: linear-gradient(135deg, #0F172A 0%, #1E1B4B 60%, #31104B 100%); color: white;">
+    <div class="card-body p-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+            <div>
+                <div class="badge bg-white bg-opacity-10 text-white border border-white border-opacity-20 px-3 py-1 rounded-pill mb-2">
+                    <i class="bi bi-cpu-fill text-warning me-1"></i> Random Forest Classifier Pipeline
+                </div>
+                <h4 class="fw-bold mb-1 text-white">Empirical Model Evaluation Report</h4>
+                <small class="text-white-50">
+                    Trained on 1,200 records, evaluated on unseen 300 test samples (80/20 stratified split). 
+                    Student ID strictly excluded from predictive features.
+                </small>
+            </div>
+            <form method="POST" action="{{ url_for('analytics.recompute_all') }}">
+                <button type="submit" class="btn btn-light fw-semibold text-primary px-3 py-2 shadow-sm">
+                    <i class="bi bi-arrow-repeat me-1"></i> Recompute All Student Predictions
+                </button>
+            </form>
+        </div>
+
+        <!-- 4 EVALUATION KPI STAT PILLS -->
+        <div class="row g-3 text-center mb-4">
+            <div class="col-md-3 col-6">
+                <div class="p-3 rounded-4 bg-white bg-opacity-10 border border-white border-opacity-10">
+                    <small class="text-white-50 fw-bold text-uppercase d-block mb-1">Test Set Accuracy</small>
+                    <span class="fs-2 fw-bold text-success">{{ data.model_metadata.accuracy }}%</span>
+                    <small class="text-white-50 d-block">Unseen 300 Samples</small>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="p-3 rounded-4 bg-white bg-opacity-10 border border-white border-opacity-10">
+                    <small class="text-white-50 fw-bold text-uppercase d-block mb-1">Precision (Macro)</small>
+                    <span class="fs-2 fw-bold text-info">{{ data.model_metadata.precision_macro }}%</span>
+                    <small class="text-white-50 d-block">Multi-class avg</small>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="p-3 rounded-4 bg-white bg-opacity-10 border border-white border-opacity-10">
+                    <small class="text-white-50 fw-bold text-uppercase d-block mb-1">Recall (Macro)</small>
+                    <span class="fs-2 fw-bold text-warning">{{ data.model_metadata.recall_macro }}%</span>
+                    <small class="text-white-50 d-block">Sensitivity rate</small>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="p-3 rounded-4 bg-white bg-opacity-10 border border-white border-opacity-10">
+                    <small class="text-white-50 fw-bold text-uppercase d-block mb-1">F1-Score (Macro)</small>
+                    <span class="fs-2 fw-bold text-white">{{ data.model_metadata.f1_macro }}%</span>
+                    <small class="text-white-50 d-block">Harmonic mean</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- CLASS BREAKDOWN METRICS -->
+        <div class="p-3 rounded-4 bg-black bg-opacity-25 border border-white border-opacity-10">
+            <h6 class="small fw-bold text-uppercase text-white-50 mb-3">Classification Breakdown per Category:</h6>
+            <div class="table-responsive">
+                <table class="table table-sm table-dark bg-transparent mb-0" style="font-size: 0.85rem;">
+                    <thead>
+                        <tr class="text-white-50">
+                            <th>Category</th>
+                            <th>Precision</th>
+                            <th>Recall</th>
+                            <th>F1-Score</th>
+                            <th>Test Support</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cat, m in data.model_metadata.per_class_metrics.items() %}
+                        <tr>
+                            <td class="fw-bold text-white">{{ cat }}</td>
+                            <td>{{ m.precision }}%</td>
+                            <td>{{ m.recall }}%</td>
+                            <td>{{ m.f1_score }}%</td>
+                            <td>{{ m.support }} samples</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CHARTS ROW: DISTRIBUTION & CORRELATION SCATTER -->
+<div class="row g-4 mb-4">
+    <!-- PERFORMANCE DISTRIBUTION DOUGHNUT -->
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header bg-transparent border-0 pt-3 px-4">
+                <h6 class="fw-bold mb-0 text-dark">Risk Classification Distribution</h6>
+                <small class="text-muted">Current student body breakdown</small>
+            </div>
+            <div class="card-body px-4 pb-4 d-flex flex-column align-items-center justify-content-center">
+                <div style="width: 100%; max-height: 220px; position: relative;">
+                    <canvas id="predictionDistChart"></canvas>
+                </div>
+                <div class="row g-2 w-100 text-center mt-3">
+                    <div class="col-4">
+                        <small class="text-success fw-bold d-block">Good</small>
+                        <span class="fs-5 fw-bold text-success">{{ data.distribution['Good Performance'] }}</span>
+                    </div>
+                    <div class="col-4">
+                        <small class="text-warning fw-bold d-block">Average</small>
+                        <span class="fs-5 fw-bold text-warning">{{ data.distribution['Average Performance'] }}</span>
+                    </div>
+                    <div class="col-4">
+                        <small class="text-danger fw-bold d-block">At-Risk</small>
+                        <span class="fs-5 fw-bold text-danger">{{ data.distribution['Needs Improvement'] }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ATTENDANCE VS MARKS SCATTER PLOT -->
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-header bg-transparent border-0 pt-3 px-4">
+                <h6 class="fw-bold mb-0 text-dark">Attendance % vs Internal Examination Marks</h6>
+                <small class="text-muted">Correlation scatter revealing students in the academic risk quadrant</small>
+            </div>
+            <div class="card-body px-4 pb-4">
+                <div style="height: 280px; position: relative;">
+                    <canvas id="scatterComparisonChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- STUDENTS REQUIRING ACADEMIC SUPPORT -->
+<div class="card mb-4 border-danger border-opacity-25">
+    <div class="card-header bg-danger bg-opacity-10 border-0 pt-4 px-4 pb-2 d-flex justify-content-between align-items-center">
+        <div>
+            <h5 class="fw-bold mb-0 text-danger d-flex align-items-center gap-2">
+                <i class="bi bi-exclamation-diamond-fill"></i> Students Requiring Academic Support
+            </h5>
+            <small class="text-muted">Prioritized by lowest attendance and examination scores for remedial mentoring</small>
+        </div>
+        <span class="badge bg-danger rounded-pill">{{ data.support_students|length }} Flagged Students</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-custom align-middle">
+            <thead>
+                <tr>
+                    <th>Student</th>
+                    <th>Class</th>
+                    <th>Attendance %</th>
+                    <th>Absences</th>
+                    <th>Internal Marks</th>
+                    <th>Prev GPA</th>
+                    <th>Identified Risk Factors</th>
+                    <th>Confidence</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for st in data.support_students %}
+                <tr>
+                    <td>
+                        <div class="fw-semibold text-dark">{{ st.full_name }}</div>
+                        <small class="text-muted font-monospace">{{ st.student_code }} &bull; {{ st.department }}</small>
+                    </td>
+                    <td><span class="badge bg-light text-dark border">{{ st.class_code }}</span></td>
+                    <td>
+                        <span class="fw-bold {% if st.attendance_percentage < 75 %}text-danger{% else %}text-warning{% endif %}">
+                            {{ st.attendance_percentage }}%
+                        </span>
+                    </td>
+                    <td><span class="badge bg-danger-subtle text-danger">{{ st.total_absences }} missed</span></td>
+                    <td><strong>{{ st.avg_internal_marks }}</strong> / 50</td>
+                    <td><span class="badge bg-secondary-subtle text-dark border">{{ st.previous_gpa }}</span></td>
+                    <td>
+                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1 text-wrap text-start" style="max-width: 280px;">
+                            {{ st.risk_factors }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge bg-light text-dark border font-monospace">{{ st.confidence_score }}%</span>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" class="text-center text-muted py-5">
+                        <i class="bi bi-shield-check text-success fs-2 d-block mb-2"></i>
+                        No students currently flagged in the academic risk category.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- SUBJECT-WISE PERFORMANCE -->
+<div class="card mb-4">
+    <div class="card-header bg-transparent border-0 pt-3 px-4">
+        <h6 class="fw-bold mb-0 text-dark">Subject-Wise Performance Overview</h6>
+        <small class="text-muted">Average examination scores across curriculum courses</small>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-custom align-middle">
+            <thead>
+                <tr>
+                    <th>Subject Code</th>
+                    <th>Subject Name</th>
+                    <th>Evaluations Recorded</th>
+                    <th>Average Score %</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sp in subject_perf %}
+                <tr>
+                    <td><span class="fw-bold font-monospace text-dark">{{ sp.subject_code }}</span></td>
+                    <td><div class="fw-semibold text-dark">{{ sp.subject_name }}</div></td>
+                    <td>{{ sp.tests_recorded }} marks entered</td>
+                    <td>
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1 fw-bold">
+                            {{ sp.avg_score_pct or 'N/A' }}%
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // 1. Prediction Distribution Doughnut
+    const distData = {{ data.distribution | tojson }};
+    const ctxDist = document.getElementById('predictionDistChart');
+    if (ctxDist) {
+        new Chart(ctxDist, {
+            type: 'doughnut',
+            data: {
+                labels: ['Good Performance', 'Average Performance', 'Needs Improvement'],
+                datasets: [{
+                    data: [
+                        distData['Good Performance'] || 0,
+                        distData['Average Performance'] || 0,
+                        distData['Needs Improvement'] || 0
+                    ],
+                    backgroundColor: ['#10B981', '#F59E0B', '#EF4444'],
+                    borderWidth: 2,
+                    borderColor: '#FFFFFF'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { boxWidth: 12 } }
+                },
+                cutout: '70%'
+            }
+        });
+    }
+
+    // 2. Attendance vs Internal Marks Scatter Chart
+    const scatterRaw = {{ data.scatter_data | tojson }};
+    const scatterDatasets = {
+        'Good Performance': [],
+        'Average Performance': [],
+        'Needs Improvement': []
+    };
+
+    scatterRaw.forEach(item => {
+        const cat = item.risk_category;
+        if (scatterDatasets[cat]) {
+            scatterDatasets[cat].push({
+                x: item.attendance_percentage,
+                y: item.avg_internal_marks,
+                name: item.full_name
+            });
+        }
+    });
+
+    const ctxScatter = document.getElementById('scatterComparisonChart');
+    if (ctxScatter) {
+        new Chart(ctxScatter, {
+            type: 'scatter',
+            data: {
+                datasets: [
+                    {
+                        label: 'Good Performance',
+                        data: scatterDatasets['Good Performance'],
+                        backgroundColor: '#10B981',
+                        pointRadius: 6
+                    },
+                    {
+                        label: 'Average Performance',
+                        data: scatterDatasets['Average Performance'],
+                        backgroundColor: '#F59E0B',
+                        pointRadius: 6
+                    },
+                    {
+                        label: 'Needs Improvement',
+                        data: scatterDatasets['Needs Improvement'],
+                        backgroundColor: '#EF4444',
+                        pointRadius: 7
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function (ctx) {
+                                const pt = ctx.raw;
+                                return `${pt.name}: Att ${pt.x}%, Marks ${pt.y}/50`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        title: { display: true, text: 'Attendance Percentage (%)' },
+                        min: 30,
+                        max: 100
+                    },
+                    y: {
+                        title: { display: true, text: 'Average Internal Marks (out of 50)' },
+                        min: 0,
+                        max: 50
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

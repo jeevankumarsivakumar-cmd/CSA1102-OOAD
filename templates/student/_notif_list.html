@@ -1,0 +1,52 @@
+{% if list %}
+<div class="list-group list-group-flush">
+    {% for n in list %}
+    <div class="list-group-item p-3 border-bottom d-flex align-items-start gap-3 {% if not n.is_read %}bg-light border-start border-4 border-primary{% endif %}" id="notif-row-{{ n.id }}">
+        <div class="rounded-circle p-2 mt-1 
+            {% if n.category in ('Low Attendance Warning', 'Absence Alert', 'Declining Marks') %}bg-danger-subtle text-danger
+            {% elif n.category in ('Approaching Threshold') %}bg-warning-subtle text-warning
+            {% elif n.category in ('Intervention Task') %}bg-primary-subtle text-primary
+            {% elif n.category in ('Academic Milestone') %}bg-success-subtle text-success
+            {% else %}bg-secondary-subtle text-secondary{% endif %}">
+            {% if n.category == 'Absence Alert' %}<i class="bi bi-x-circle-fill fs-5"></i>
+            {% elif n.category in ('Low Attendance Warning', 'Approaching Threshold') %}<i class="bi bi-exclamation-triangle-fill fs-5"></i>
+            {% elif n.category == 'Declining Marks' %}<i class="bi bi-graph-down-arrow fs-5"></i>
+            {% elif n.category == 'Intervention Task' %}<i class="bi bi-person-workspace fs-5"></i>
+            {% elif n.category == 'Academic Milestone' %}<i class="bi bi-trophy-fill fs-5"></i>
+            {% else %}<i class="bi bi-bell-fill fs-5"></i>{% endif %}
+        </div>
+
+        <div class="flex-grow-1">
+            <div class="d-flex align-items-center justify-content-between mb-1">
+                <div class="d-flex align-items-center gap-2">
+                    <strong class="text-dark">{{ n.title }}</strong>
+                    {% if not n.is_read %}
+                        <span class="badge bg-danger rounded-pill unread-dot" style="font-size: 0.65rem;">NEW</span>
+                    {% endif %}
+                </div>
+                <small class="text-muted">{{ n.created_at[:16] if n.created_at else '' }}</small>
+            </div>
+            <p class="text-muted small mb-2">{{ n.message }}</p>
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex gap-2">
+                    <span class="badge bg-light text-secondary border small">{{ n.category }}</span>
+                    <span class="badge {% if n.priority == 'High' %}bg-danger-subtle text-danger{% elif n.priority == 'Medium' %}bg-warning-subtle text-warning{% else %}bg-light text-muted{% endif %} border small">
+                        {{ n.priority }} Priority
+                    </span>
+                </div>
+                {% if not n.is_read %}
+                <button class="btn btn-sm btn-link text-primary text-decoration-none p-0 btn-mark-read" data-id="{{ n.id }}">
+                    <i class="bi bi-check2 me-1"></i>Mark Read
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-5 text-muted">
+    <i class="bi bi-bell-slash fs-1 text-secondary opacity-50 d-block mb-2"></i>
+    <p class="small mb-0">No notifications found in this category.</p>
+</div>
+{% endif %}

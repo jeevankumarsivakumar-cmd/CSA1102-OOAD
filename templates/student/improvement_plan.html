@@ -1,0 +1,279 @@
+{% extends "base.html" %}
+
+{% block title %}My Academic Improvement Plan{% endblock %}
+{% block page_title %}My Academic Improvement Plan{% endblock %}
+{% block page_subtitle %}Personalized Academic Growth Pathways, Target Milestones & Faculty Mentoring Guidance{% endblock %}
+
+{% block content %}
+<!-- DIAGNOSTIC OVERVIEW BANNER -->
+<div class="card border-0 shadow-sm p-4 mb-4 bg-white">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+        <div class="d-flex align-items-center gap-3">
+            <div class="rounded-circle p-3 bg-{{ plan.status_color }}-subtle text-{{ plan.status_color }} fs-2">
+                {% if plan.status_color == 'danger' %}
+                    <i class="bi bi-exclamation-octagon-fill"></i>
+                {% elif plan.status_color == 'warning' %}
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                {% else %}
+                    <i class="bi bi-shield-check"></i>
+                {% endif %}
+            </div>
+            <div>
+                <div class="text-uppercase small fw-bold text-muted">Current Academic Diagnostic</div>
+                <h5 class="fw-bold text-dark mb-1">{{ plan.status_headline }}</h5>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <span class="badge bg-light text-dark border">
+                        <i class="bi bi-person-fill text-primary me-1"></i>{{ student.full_name }} ({{ student.student_id }})
+                    </span>
+                    <span class="badge bg-light text-dark border">
+                        <i class="bi bi-calendar3 me-1 text-primary"></i>Attendance: <strong>{{ plan.att_pct }}%</strong>
+                    </span>
+                    <span class="badge bg-light text-dark border">
+                        <i class="bi bi-cpu me-1 text-primary"></i>AI Risk: <strong>{{ plan.risk_category }}</strong>
+                    </span>
+                    <span class="badge bg-light text-dark border">
+                        <i class="bi bi-graph-up me-1 text-primary"></i>Score Trajectory: <strong>{{ plan.marks_trend }}</strong>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="text-end">
+            <a href="{{ url_for('student.recovery_planner') }}" class="btn btn-outline-primary btn-sm px-3">
+                <i class="bi bi-calculator me-1"></i>Open Recovery Simulator
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- AREAS REQUIRING IMPROVEMENT & RECOMMENDED ACTIONS -->
+<div class="row g-4 mb-4">
+    <!-- Areas Requiring Focus -->
+    <div class="col-lg-5">
+        <div class="card h-100 border-0 shadow-sm p-4">
+            <h6 class="fw-bold text-dark text-uppercase small tracking-wide mb-3">
+                <i class="bi bi-bullseye text-danger me-2"></i>Priority Improvement Areas
+            </h6>
+            <div class="d-flex flex-column gap-3">
+                {% for area in plan.areas %}
+                <div class="p-3 rounded-3 border bg-light">
+                    <div class="d-flex align-items-center justify-content-between mb-1">
+                        <strong class="text-dark small">{{ area.title }}</strong>
+                        <span class="badge {% if area.severity == 'Critical' %}bg-danger{% elif area.severity == 'High' %}bg-warning text-dark{% else %}bg-info text-dark{% endif %}">
+                            {{ area.severity }}
+                        </span>
+                    </div>
+                    <p class="small text-muted mb-2">{{ area.description }}</p>
+                    <div class="small fw-semibold text-secondary">
+                        Observed Metric: <span class="text-dark">{{ area.metric }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Recommended Action Plan -->
+    <div class="col-lg-7">
+        <div class="card h-100 border-0 shadow-sm p-4">
+            <h6 class="fw-bold text-dark text-uppercase small tracking-wide mb-3">
+                <i class="bi bi-compass-fill text-primary me-2"></i>Recommended Action Plan
+            </h6>
+            <div class="d-flex flex-column gap-3">
+                {% for act in plan.actions %}
+                <div class="d-flex gap-3 p-3 rounded-3 border bg-white shadow-xs">
+                    <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width: 42px; height: 42px; font-size: 1.2rem;">
+                        <i class="bi {{ act.icon }}"></i>
+                    </div>
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <span class="badge bg-secondary-subtle text-secondary small">{{ act.phase }}</span>
+                            <strong class="text-dark">{{ act.title }}</strong>
+                        </div>
+                        <p class="small text-muted mb-0">{{ act.detail }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- WEEKLY GOALS & FACULTY MENTORING TASKS -->
+<div class="row g-4 mb-4">
+    <!-- Active Weekly Goals (Interactive Checklist) -->
+    <div class="col-lg-7">
+        <div class="card h-100 border-0 shadow-sm p-4">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <div>
+                    <h6 class="fw-bold text-dark text-uppercase small tracking-wide mb-0">
+                        <i class="bi bi-check2-square text-success me-2"></i>Weekly Academic Milestones & Goals
+                    </h6>
+                    <small class="text-muted">Check off goals as you complete them to track weekly momentum</small>
+                </div>
+                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addGoalModal">
+                    <i class="bi bi-plus-lg me-1"></i>Add Goal
+                </button>
+            </div>
+
+            {% if student_goals %}
+            <div class="list-group list-group-flush">
+                {% for g in student_goals %}
+                <div class="list-group-item d-flex align-items-center justify-content-between px-0 py-3 border-bottom">
+                    <div class="d-flex align-items-center gap-3">
+                        <input class="form-check-input goal-toggle-check fs-5 mt-0 cursor-pointer" type="checkbox" 
+                               data-goal-id="{{ g.id }}" {% if g.is_completed %}checked{% endif %}>
+                        <div>
+                            <span class="{% if g.is_completed %}text-decoration-line-through text-muted{% else %}text-dark fw-semibold{% endif %}" id="goalText-{{ g.id }}">
+                                {{ g.goal_title }}
+                            </span>
+                            <div class="small text-muted mt-1 d-flex gap-2 align-items-center">
+                                <span class="badge bg-light text-secondary border">{{ g.goal_category }}</span>
+                                {% if g.target_date %}
+                                    <span><i class="bi bi-clock me-1"></i>Target: {{ g.target_date }}</span>
+                                {% endif %}
+                                {% if g.is_completed and g.completed_at %}
+                                    <span class="text-success"><i class="bi bi-check-all me-1"></i>Done {{ g.completed_at[:10] }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <form action="{{ url_for('student.delete_goal', goal_id=g.id) }}" method="POST" onsubmit="return confirm('Remove this goal?');">
+                        <button type="submit" class="btn btn-sm text-danger-emphasis btn-link p-0" title="Delete Goal">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </form>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-4 text-muted">
+                <i class="bi bi-clipboard-check fs-1 text-secondary opacity-50 d-block mb-2"></i>
+                <p class="small mb-2">No custom academic goals recorded yet.</p>
+                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addGoalModal">
+                    Add Your First Weekly Goal
+                </button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Assigned Faculty Mentoring Tasks (Feature 3 integration) -->
+    <div class="col-lg-5">
+        <div class="card h-100 border-0 shadow-sm p-4">
+            <h6 class="fw-bold text-dark text-uppercase small tracking-wide mb-3">
+                <i class="bi bi-person-workspace text-primary me-2"></i>Faculty Assigned Mentoring Tasks
+            </h6>
+            {% if assigned_interventions %}
+            <div class="d-flex flex-column gap-3">
+                {% for inv in assigned_interventions %}
+                <div class="p-3 rounded-3 border bg-light">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <strong class="text-dark small">
+                            <i class="bi bi-person-badge text-primary me-1"></i>{{ inv.faculty_name }}
+                        </strong>
+                        <span class="badge {% if inv.status == 'Completed' %}bg-success{% elif inv.status == 'In Progress' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                            {{ inv.status }}
+                        </span>
+                    </div>
+                    <div class="small text-muted mb-2">
+                        <strong>Date:</strong> {{ inv.mentoring_date }}
+                    </div>
+                    {% if inv.assigned_tasks %}
+                    <div class="p-2 rounded bg-white border small mb-2">
+                        <div class="text-muted fw-bold mb-1">Tasks to Complete:</div>
+                        <div class="text-dark" style="white-space: pre-line;">{{ inv.assigned_tasks }}</div>
+                    </div>
+                    {% endif %}
+                    {% if inv.mentoring_notes %}
+                    <div class="small text-muted fst-italic">
+                        "{{ inv.mentoring_notes }}"
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-4 text-muted">
+                <i class="bi bi-chat-heart fs-1 text-secondary opacity-50 d-block mb-2"></i>
+                <p class="small mb-0">No active faculty interventions logged for your profile at this time.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- ADD GOAL MODAL -->
+<div class="modal fade" id="addGoalModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-bottom">
+                <h6 class="modal-title fw-bold text-dark">
+                    <i class="bi bi-plus-circle text-primary me-2"></i>Add Weekly Academic Goal
+                </h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('student.add_goal') }}" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-dark">Goal Title / Task</label>
+                        <input type="text" name="goal_title" class="form-control" placeholder="e.g., Revise OOAD Unit 2 question bank" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-dark">Goal Category</label>
+                        <select name="goal_category" class="form-select">
+                            <option value="Attendance">Attendance Commitment</option>
+                            <option value="Exam Prep">Internal Exam Preparation</option>
+                            <option value="Assignment">Assignment & Project</option>
+                            <option value="Mentoring">Faculty Mentoring Task</option>
+                            <option value="Study Routine" selected>Daily Study Routine</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-dark">Target Completion Date</label>
+                        <input type="date" name="target_date" class="form-control">
+                    </div>
+                </div>
+                <div class="modal-footer border-top">
+                    <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm px-3">Save Goal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ETHICAL TRANSPARENCY DISCLAIMER -->
+<div class="text-center text-muted small py-2">
+    <i class="bi bi-shield-lock me-1"></i>
+    Academic recommendations are synthesized dynamically based on real marks and attendance data. Predictions are advisory and intended to support student success.
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.goal-toggle-check').forEach(chk => {
+        chk.addEventListener('change', function() {
+            const goalId = this.getAttribute('data-goal-id');
+            const textEl = document.getElementById('goalText-' + goalId);
+
+            fetch(`/student/api/goals/toggle/${goalId}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'}
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    if (data.is_completed) {
+                        textEl.className = 'text-decoration-line-through text-muted';
+                    } else {
+                        textEl.className = 'text-dark fw-semibold';
+                    }
+                }
+            })
+            .catch(err => console.error("Error toggling goal:", err));
+        });
+    });
+});
+</script>
+{% endblock %}

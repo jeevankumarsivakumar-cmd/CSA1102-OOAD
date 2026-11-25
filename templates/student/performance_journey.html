@@ -1,0 +1,333 @@
+{% extends "base.html" %}
+
+{% block title %}My Performance Journey{% endblock %}
+{% block page_title %}My Performance Journey{% endblock %}
+{% block page_subtitle %}Interactive Multidimensional Visualizations of Your Academic Progression & Attendance Trends{% endblock %}
+
+{% block content %}
+<!-- SUMMARY KPI CARDS ROW -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card p-3 border-0 shadow-sm bg-white text-center">
+            <small class="text-muted text-uppercase fw-bold">Attendance Progression</small>
+            <div class="fs-2 fw-bold {% if att_stats.attendance_percentage < 75 %}text-danger{% elif att_stats.attendance_percentage < 80 %}text-warning{% else %}text-success{% endif %}">
+                {{ att_stats.attendance_percentage }}%
+            </div>
+            <small class="text-muted">{{ att_stats.total_classes_conducted }} total lectures tracked</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3 border-0 shadow-sm bg-white text-center">
+            <small class="text-muted text-uppercase fw-bold">Cumulative GPA Baseline</small>
+            <div class="fs-2 fw-bold text-primary">{{ student.previous_gpa }}</div>
+            <small class="text-muted">Previous semester GPA</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3 border-0 shadow-sm bg-white text-center">
+            <small class="text-muted text-uppercase fw-bold">AI Risk Classification</small>
+            <div class="fs-2 fw-bold {% if prediction.risk_category == 'Good Performance' %}text-success{% elif prediction.risk_category == 'Average Performance' %}text-warning{% else %}text-danger{% endif %}">
+                {{ prediction.risk_category }}
+            </div>
+            <small class="text-muted">Confidence: {{ prediction.confidence_score }}%</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3 border-0 shadow-sm bg-white text-center">
+            <small class="text-muted text-uppercase fw-bold">Active Courses</small>
+            <div class="fs-2 fw-bold text-dark">{{ subjects_map|length }}</div>
+            <small class="text-muted">Evaluated in current term</small>
+        </div>
+    </div>
+</div>
+
+{% if not has_sufficient_marks and not has_sufficient_attendance %}
+<!-- INSUFFICIENT DATA BANNER -->
+<div class="alert alert-info border-info-subtle bg-info-subtle d-flex align-items-center gap-3 p-4 rounded-3 shadow-sm mb-4">
+    <div class="fs-1 text-info"><i class="bi bi-clock-history"></i></div>
+    <div>
+        <h6 class="fw-bold text-dark mb-1">Building Your Longitudinal Performance History</h6>
+        <p class="small text-muted mb-0">
+            Performance journey analytics require multiple assessments and attendance logs over time to generate trend lines. 
+            As your faculty enter additional internal exam scores and daily attendance records, your multi-axis progression graphs will render here automatically.
+        </p>
+    </div>
+</div>
+{% endif %}
+
+<!-- VISUAL CHARTS ROW 1: MARKS COMPARISON & ATTENDANCE PROGRESSION -->
+<div class="row g-4 mb-4">
+    <!-- Chart 1: Internal Marks Comparison Across Subjects -->
+    <div class="col-lg-6">
+        <div class="card h-100 border-0 shadow-sm p-4">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <div>
+                    <h6 class="fw-bold text-dark mb-1">
+                        <i class="bi bi-bar-chart-fill text-primary me-2"></i>Internal Assessment Score Comparison
+                    </h6>
+                    <small class="text-muted">Direct comparison of Internal 1 vs. Internal 2 vs. Assignment scores (%)</small>
+                </div>
+            </div>
+            <div style="height: 320px; position: relative;">
+                <canvas id="marksComparisonChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart 2: Cumulative Attendance Progression Timeline -->
+    <div class="col-lg-6">
+        <div class="card h-100 border-0 shadow-sm p-4">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <div>
+                    <h6 class="fw-bold text-dark mb-1">
+                        <i class="bi bi-graph-up text-success me-2"></i>Attendance Progression Timeline
+                    </h6>
+                    <small class="text-muted">Cumulative attendance rate trajectory over recorded calendar dates</small>
+                </div>
+            </div>
+            <div style="height: 320px; position: relative;">
+                <canvas id="attendanceTimelineChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- VISUAL CHARTS ROW 2: SUBJECT PERFORMANCE BREAKDOWN & GPA RADAR -->
+<div class="row g-4 mb-4">
+    <!-- Chart 3: Subject-wise Mastery Overview -->
+    <div class="col-lg-7">
+        <div class="card h-100 border-0 shadow-sm p-4">
+            <h6 class="fw-bold text-dark mb-3">
+                <i class="bi bi-journal-check text-info me-2"></i>Course Performance Scorecard
+            </h6>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Subject</th>
+                            <th>Internal 1</th>
+                            <th>Internal 2</th>
+                            <th>Assignment</th>
+                            <th>Trajectory</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for code, data in subjects_map.items() %}
+                        <tr>
+                            <td>
+                                <strong>{{ data.subject_name }}</strong>
+                                <div class="font-monospace small text-muted">{{ code }}</div>
+                            </td>
+                            <td>
+                                {% if data['Internal 1'] is not none %}
+                                    <span class="badge {% if data['Internal 1'] >= 80 %}bg-success-subtle text-success{% elif data['Internal 1'] >= 60 %}bg-warning-subtle text-warning{% else %}bg-danger-subtle text-danger{% endif %} border">
+                                        {{ data['Internal 1'] }}%
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted small">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if data['Internal 2'] is not none %}
+                                    <span class="badge {% if data['Internal 2'] >= 80 %}bg-success-subtle text-success{% elif data['Internal 2'] >= 60 %}bg-warning-subtle text-warning{% else %}bg-danger-subtle text-danger{% endif %} border">
+                                        {{ data['Internal 2'] }}%
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted small">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if data['Assignment'] is not none %}
+                                    <span class="badge bg-light text-dark border">{{ data['Assignment'] }}%</span>
+                                {% else %}
+                                    <span class="text-muted small">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if data['Internal 1'] is not none and data['Internal 2'] is not none %}
+                                    {% set diff = data['Internal 2'] - data['Internal 1'] %}
+                                    {% if diff > 0 %}
+                                        <span class="text-success small fw-semibold"><i class="bi bi-arrow-up-right"></i> +{{ diff|round(1) }}%</span>
+                                    {% elif diff < 0 %}
+                                        <span class="text-danger small fw-semibold"><i class="bi bi-arrow-down-right"></i> {{ diff|round(1) }}%</span>
+                                    {% else %}
+                                        <span class="text-muted small"><i class="bi bi-dash"></i> Steady</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted small">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">
+                                No assessment records uploaded for current semester yet.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart 4: Academic Competency Radar -->
+    <div class="col-lg-5">
+        <div class="card h-100 border-0 shadow-sm p-4">
+            <h6 class="fw-bold text-dark mb-1">
+                <i class="bi bi-pie-chart-fill text-warning me-2"></i>Course Mastery Radar
+            </h6>
+            <small class="text-muted mb-3 d-block">Multidimensional balance across current curriculum</small>
+            <div style="height: 280px; position: relative;">
+                <canvas id="competencyRadarChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 1. MARKS COMPARISON BAR CHART
+    const subjectLabels = [];
+    const it1Data = [];
+    const it2Data = [];
+    const assignData = [];
+
+    {% for code, data in subjects_map.items() %}
+        subjectLabels.push("{{ code }}");
+        it1Data.push({{ data['Internal 1'] or 'null' }});
+        it2Data.push({{ data['Internal 2'] or 'null' }});
+        assignData.push({{ data['Assignment'] or 'null' }});
+    {% endfor %}
+
+    const ctxMarks = document.getElementById('marksComparisonChart').getContext('2d');
+    new Chart(ctxMarks, {
+        type: 'bar',
+        data: {
+            labels: subjectLabels,
+            datasets: [
+                {
+                    label: 'Internal Test 1 (%)',
+                    data: it1Data,
+                    backgroundColor: '#6366f1',
+                    borderRadius: 4
+                },
+                {
+                    label: 'Internal Test 2 (%)',
+                    data: it2Data,
+                    backgroundColor: '#8b5cf6',
+                    borderRadius: 4
+                },
+                {
+                    label: 'Assignment (%)',
+                    data: assignData,
+                    backgroundColor: '#38bdf8',
+                    borderRadius: 4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'top', labels: { usePointStyle: true } }
+            },
+            scales: {
+                y: { min: 0, max: 100, ticks: { callback: v => v + '%' }, grid: { color: 'rgba(0,0,0,0.05)' } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+
+    // 2. ATTENDANCE PROGRESSION TIMELINE CHART
+    const attDates = [];
+    const attPcts = [];
+    const targetLine = [];
+
+    {% for pt in att_timeline %}
+        attDates.push("{{ pt.date }}");
+        attPcts.push({{ pt.percentage }});
+        targetLine.push(75.0);
+    {% endfor %}
+
+    const ctxAtt = document.getElementById('attendanceTimelineChart').getContext('2d');
+    new Chart(ctxAtt, {
+        type: 'line',
+        data: {
+            labels: attDates,
+            datasets: [
+                {
+                    label: 'Cumulative Attendance %',
+                    data: attPcts,
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 4
+                },
+                {
+                    label: '75% Minimum Cutoff',
+                    data: targetLine,
+                    borderColor: '#ef4444',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    pointRadius: 0,
+                    fill: false
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'top', labels: { usePointStyle: true } }
+            },
+            scales: {
+                y: { min: 30, max: 100, ticks: { callback: v => v + '%' }, grid: { color: 'rgba(0,0,0,0.05)' } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+
+    // 3. RADAR CHART
+    const radarLabels = [];
+    const radarScores = [];
+    {% for code, data in subjects_map.items() %}
+        radarLabels.push("{{ code }}");
+        radarScores.push({{ data['Internal 1'] or data['Assignment'] or 70 }});
+    {% endfor %}
+
+    const ctxRadar = document.getElementById('competencyRadarChart').getContext('2d');
+    new Chart(ctxRadar, {
+        type: 'radar',
+        data: {
+            labels: radarLabels.length > 0 ? radarLabels : ['OOAD', 'SE', 'DBMS', 'CN', 'AI'],
+            datasets: [{
+                label: 'Score Profile (%)',
+                data: radarScores.length > 0 ? radarScores : [78, 65, 82, 70, 88],
+                borderColor: '#6366f1',
+                backgroundColor: 'rgba(99, 102, 241, 0.2)',
+                pointBackgroundColor: '#4f46e5',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                r: {
+                    angleLines: { color: 'rgba(0,0,0,0.08)' },
+                    grid: { color: 'rgba(0,0,0,0.08)' },
+                    min: 0,
+                    max: 100,
+                    ticks: { stepSize: 25 }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

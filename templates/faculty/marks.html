@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Enter Academic Marks{% endblock %}
+{% block page_title %}Internal Examination Marks{% endblock %}
+{% block page_subtitle %}Record Continuous Assessments, Assignments & Sync with AI Predictive Models{% endblock %}
+
+{% block content %}
+<!-- CLASS & EXAM SELECTION CARD -->
+<div class="card mb-4">
+    <div class="card-body p-4">
+        <form method="GET" action="{{ url_for('faculty.marks') }}" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label small fw-bold text-dark">Select Class *</label>
+                <select name="class_id" class="form-select" required onchange="this.form.submit()">
+                    <option value="">-- Choose Assigned Class --</option>
+                    {% for c in classes %}
+                        <option value="{{ c.id }}" {% if selected_class_id == c.id %}selected{% endif %}>
+                            {{ c.class_code }} ({{ c.department }})
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label small fw-bold text-dark">Select Course Subject *</label>
+                <select name="subject_id" class="form-select" required onchange="this.form.submit()">
+                    <option value="">-- Choose Subject --</option>
+                    {% for s in subjects %}
+                        <option value="{{ s.id }}" {% if selected_subject_id == s.id %}selected{% endif %}>
+                            {{ s.subject_code }} - {{ s.subject_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label small fw-bold text-dark">Assessment Type *</label>
+                <select name="exam_type" class="form-select" required onchange="this.form.submit()">
+                    <option value="Internal 1" {% if selected_exam == 'Internal 1' %}selected{% endif %}>Internal Exam 1</option>
+                    <option value="Internal 2" {% if selected_exam == 'Internal 2' %}selected{% endif %}>Internal Exam 2</option>
+                    <option value="Assignment" {% if selected_exam == 'Assignment' %}selected{% endif %}>Assignment</option>
+                    <option value="Lab Assessment" {% if selected_exam == 'Lab Assessment' %}selected{% endif %}>Lab Assessment</option>
+                </select>
+            </div>
+
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-outline-custom w-100" title="Refresh">
+                    <i class="bi bi-arrow-clockwise"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MARKS ENTRY SHEET -->
+{% if selected_class_id and selected_subject_id %}
+<div class="card mb-4">
+    <div class="card-header bg-transparent border-0 pt-4 px-4 pb-2 d-flex justify-content-between align-items-center">
+        <div>
+            <h5 class="fw-bold mb-0 text-dark">Score Sheet: {{ selected_exam }}</h5>
+            <small class="text-muted">Enter marks obtained. Values will automatically update student predictive risk factors.</small>
+        </div>
+        <div class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2">
+            <i class="bi bi-cpu-fill me-1"></i> AI Sync Active
+        </div>
+    </div>
+
+    <form method="POST" action="{{ url_for('faculty.marks') }}">
+        <input type="hidden" name="class_id" value="{{ selected_class_id }}">
+        <input type="hidden" name="subject_id" value="{{ selected_subject_id }}">
+        <input type="hidden" name="exam_type" value="{{ selected_exam }}">
+
+        <div class="p-4 bg-light border-bottom">
+            <div class="row g-3 align-items-center">
+                <div class="col-sm-4">
+                    <label class="form-label small fw-bold text-dark mb-1">Maximum Marks</label>
+                    <input type="number" step="0.5" name="max_marks" value="50.0" class="form-control" id="globalMaxMarks" required>
+                </div>
+                <div class="col-sm-4">
+                    <label class="form-label small fw-bold text-dark mb-1">Assessment Date</label>
+                    <input type="date" name="exam_date" value="2026-11-17" class="form-control" required>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-custom align-middle">
+                <thead>
+                    <tr>
+                        <th style="width: 50px;">#</th>
+                        <th style="width: 150px;">Student ID</th>
+                        <th>Student Name</th>
+                        <th style="width: 200px;">Marks Obtained</th>
+                        <th>Remarks</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for st in students %}
+                    <tr>
+                        <td class="text-muted">{{ loop.index }}</td>
+                        <td>
+                            <input type="hidden" name="student_ids" value="{{ st.id }}">
+                            <span class="fw-bold font-monospace text-dark">{{ st.student_id }}</span>
+                        </td>
+                        <td>
+                            <div class="fw-semibold text-dark">{{ st.full_name }}</div>
+                        </td>
+                        <td>
+                            <div class="input-group input-group-sm">
+                                <input type="number" step="0.5" min="0" name="marks_{{ st.id }}" 
+                                       value="{{ st.marks_obtained }}" class="form-control fw-bold" placeholder="Score">
+                                <span class="input-group-text bg-white text-muted">/ 50</span>
+                            </div>
+                        </td>
+                        <td>
+                            <input type="text" name="remarks_{{ st.id }}" value="{{ st.remarks }}" 
+                                   class="form-control form-control-sm" placeholder="e.g. Satisfactory">
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-5">
+                            No students found in this class section.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if students %}
+        <div class="card-footer bg-light p-4 text-end">
+            <button type="submit" class="btn btn-primary-gradient px-4 py-2">
+                <i class="bi bi-cloud-arrow-up-fill me-1"></i> Save Marks & Recompute AI Insights
+            </button>
+        </div>
+        {% endif %}
+    </form>
+</div>
+{% else %}
+<div class="card text-center py-5">
+    <div class="card-body">
+        <div class="brand-logo-icon mx-auto mb-3" style="width: 54px; height: 54px; font-size: 1.75rem;">
+            <i class="bi bi-journal-text"></i>
+        </div>
+        <h5 class="fw-bold text-dark">Select Class & Subject</h5>
+        <p class="text-muted small mx-auto" style="max-width: 480px;">
+            Choose your assigned class section and subject code above to load the internal exam gradebook.
+        </p>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

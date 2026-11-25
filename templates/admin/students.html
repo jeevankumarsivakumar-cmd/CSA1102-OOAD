@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+
+{% block title %}Student Management{% endblock %}
+{% block page_title %}Student Management{% endblock %}
+{% block page_subtitle %}Enrollment, Student Rosters & Performance Profiles{% endblock %}
+
+{% block content %}
+<div class="card mb-4">
+    <div class="card-body p-4">
+        <!-- FILTER & ACTION TOOLBAR -->
+        <div class="row g-3 align-items-center justify-content-between mb-4">
+            <div class="col-md-7">
+                <form method="GET" action="{{ url_for('admin.students') }}" class="row g-2">
+                    <div class="col-sm-5">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                            <input type="text" name="q" value="{{ q }}" class="form-control border-start-0 ps-0" placeholder="Search name, ID...">
+                        </div>
+                    </div>
+                    <div class="col-sm-3">
+                        <select name="class_id" class="form-select" onchange="this.form.submit()">
+                            <option value="">All Classes</option>
+                            {% for c in classes %}
+                                <option value="{{ c.id }}" {% if selected_class|string == c.id|string %}selected{% endif %}>{{ c.class_code }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-sm-4">
+                        <select name="department" class="form-select" onchange="this.form.submit()">
+                            <option value="">All Departments</option>
+                            {% for d in departments %}
+                                <option value="{{ d }}" {% if selected_dept == d %}selected{% endif %}>{{ d }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="col-md-5 text-md-end">
+                <button type="button" class="btn btn-primary-gradient" data-bs-toggle="modal" data-bs-target="#addStudentModal">
+                    <i class="bi bi-person-plus-fill me-1"></i> Register New Student
+                </button>
+            </div>
+        </div>
+
+        <!-- STUDENTS TABLE -->
+        <div class="table-responsive">
+            <table class="table table-custom align-middle">
+                <thead>
+                    <tr>
+                        <th>Student ID</th>
+                        <th>Full Name</th>
+                        <th>Class</th>
+                        <th>Department</th>
+                        <th>Contact</th>
+                        <th>Cumulative Att %</th>
+                        <th>Prev GPA</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in students %}
+                    <tr>
+                        <td>
+                            <span class="fw-bold text-dark font-monospace">{{ s.student_id }}</span>
+                        </td>
+                        <td>
+                            <div class="fw-semibold text-dark">{{ s.full_name }}</div>
+                            <small class="text-muted">{{ s.email }}</small>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark border">{{ s.class_code }}</span>
+                        </td>
+                        <td>
+                            <small class="text-muted">{{ s.department }}</small>
+                        </td>
+                        <td>
+                            <small class="text-muted d-block"><i class="bi bi-telephone me-1"></i>{{ s.contact_phone or 'N/A' }}</small>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="progress flex-grow-1" style="height: 6px; width: 60px;">
+                                    <div class="progress-bar {% if s.attendance_percentage < 75 %}bg-danger{% else %}bg-success{% endif %}" 
+                                         style="width: {{ s.attendance_percentage }}%;"></div>
+                                </div>
+                                <span class="fw-bold {% if s.attendance_percentage < 75 %}text-danger{% else %}text-success{% endif %}">
+                                    {{ s.attendance_percentage }}%
+                                </span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary-subtle text-dark border">{{ s.previous_gpa }}</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">{{ s.enrollment_status }}</span>
+                        </td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-outline-custom text-primary me-1" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#editStudentModal{{ s.id }}" 
+                                    title="Edit Student">
+                                <i class="bi bi-pencil-square"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-custom text-danger" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#deleteStudentModal{{ s.id }}" 
+                                    title="Delete Student">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+
+                    <!-- EDIT MODAL -->
+                    <div class="modal fade" id="editStudentModal{{ s.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content rounded-4 border-0 shadow">
+                                <form method="POST" action="{{ url_for('admin.students') }}">
+                                    <input type="hidden" name="action" value="edit">
+                                    <input type="hidden" name="student_table_id" value="{{ s.id }}">
+                                    <div class="modal-header border-0 pb-0">
+                                        <h5 class="modal-title fw-bold">Edit Student: {{ s.student_id }}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="mb-3">
+                                            <label class="form-label small fw-semibold">Full Name</label>
+                                            <input type="text" name="full_name" value="{{ s.full_name }}" class="form-control" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label small fw-semibold">Email</label>
+                                            <input type="email" name="email" value="{{ s.email }}" class="form-control" required>
+                                        </div>
+                                        <div class="row g-2 mb-3">
+                                            <div class="col-6">
+                                                <label class="form-label small fw-semibold">Class</label>
+                                                <select name="class_id" class="form-select" required>
+                                                    {% for c in classes %}
+                                                        <option value="{{ c.id }}" {% if s.class_id == c.id %}selected{% endif %}>{{ c.class_code }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="form-label small fw-semibold">Status</label>
+                                                <select name="enrollment_status" class="form-select">
+                                                    <option value="Active" {% if s.enrollment_status == 'Active' %}selected{% endif %}>Active</option>
+                                                    <option value="Suspended" {% if s.enrollment_status == 'Suspended' %}selected{% endif %}>Suspended</option>
+                                                    <option value="Graduated" {% if s.enrollment_status == 'Graduated' %}selected{% endif %}>Graduated</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="row g-2 mb-3">
+                                            <div class="col-6">
+                                                <label class="form-label small fw-semibold">Phone</label>
+                                                <input type="text" name="phone" value="{{ s.contact_phone }}" class="form-control">
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="form-label small fw-semibold">Previous GPA</label>
+                                                <input type="number" step="0.01" min="0" max="10" name="previous_gpa" value="{{ s.previous_gpa }}" class="form-control">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer border-0 pt-0">
+                                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="submit" class="btn btn-primary-gradient">Save Changes</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- DELETE CONFIRMATION MODAL -->
+                    <div class="modal fade" id="deleteStudentModal{{ s.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content rounded-4 border-0 shadow">
+                                <form method="POST" action="{{ url_for('admin.students') }}">
+                                    <input type="hidden" name="action" value="delete">
+                                    <input type="hidden" name="student_table_id" value="{{ s.id }}">
+                                    <div class="modal-body p-4 text-center">
+                                        <div class="text-danger fs-1 mb-2"><i class="bi bi-exclamation-circle"></i></div>
+                                        <h5 class="fw-bold mb-1">Confirm Student Deletion</h5>
+                                        <p class="text-muted small">Are you sure you want to remove <strong>{{ s.full_name }}</strong> ({{ s.student_id }})? This action will cascade and remove their attendance and mark records.</p>
+                                        <div class="d-flex justify-content-center gap-2 mt-4">
+                                            <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cancel</button>
+                                            <button type="submit" class="btn btn-danger px-4">Yes, Delete</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% else %}
+                    <tr>
+                        <td colspan="9" class="text-center text-muted py-5">
+                            <i class="bi bi-search fs-2 d-block mb-2"></i>
+                            No students match your query.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ADD STUDENT MODAL -->
+<div class="modal fade" id="addStudentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <form method="POST" action="{{ url_for('admin.students') }}">
+                <input type="hidden" name="action" value="create">
+                <div class="modal-header border-0 pb-0 px-4 pt-4">
+                    <h5 class="modal-title fw-bold">Enroll New Student</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="text-muted small mb-3">A unique Student ID (`STU2026XXX`) will be auto-generated automatically.</p>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Full Name *</label>
+                            <input type="text" name="full_name" class="form-control" placeholder="e.g. Yashvardhan Singhania" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Username *</label>
+                            <input type="text" name="username" class="form-control" placeholder="e.g. yash2026" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Email Address *</label>
+                            <input type="email" name="email" class="form-control" placeholder="student@university.edu" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Default Password *</label>
+                            <input type="text" name="password" value="student123" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Class Section *</label>
+                            <select name="class_id" class="form-select" required>
+                                {% for c in classes %}
+                                    <option value="{{ c.id }}">{{ c.class_code }} ({{ c.department }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Department *</label>
+                            <input type="text" name="department" class="form-control" value="Computer Science & Engineering" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Contact Phone</label>
+                            <input type="text" name="phone" class="form-control" placeholder="+91 98765 43210">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Previous GPA</label>
+                            <input type="number" step="0.01" min="0" max="10" name="previous_gpa" value="7.50" class="form-control">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary-gradient px-4">Register Student</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

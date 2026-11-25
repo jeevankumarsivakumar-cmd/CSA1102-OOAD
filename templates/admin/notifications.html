@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Campus-Wide Alert Center{% endblock %}
+{% block page_title %}Campus-Wide Notification Center{% endblock %}
+{% block page_subtitle %}Comprehensive Institution-Level Audit of System Alerts, Risk Triggers & Attendance Broadcasts{% endblock %}
+
+{% block content %}
+<!-- SUMMARY METRICS -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card p-3 border-0 shadow-sm bg-white">
+            <small class="text-muted text-uppercase fw-bold">Total Campus Alerts</small>
+            <div class="fs-2 fw-bold text-dark">{{ alerts|length }}</div>
+            <small class="text-muted">Recorded system notices</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3 border-0 shadow-sm bg-white">
+            <small class="text-muted text-uppercase fw-bold">Attendance Warnings</small>
+            <div class="fs-2 fw-bold text-danger">
+                {{ category_counts.get('Low Attendance Warning', 0) }}
+            </div>
+            <small class="text-danger">< 75% cutoff triggers</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3 border-0 shadow-sm bg-white">
+            <small class="text-muted text-uppercase fw-bold">Academic Risks</small>
+            <div class="fs-2 fw-bold text-warning">
+                {{ category_counts.get('Academic Risk', 0) }}
+            </div>
+            <small class="text-warning">ML model risk detections</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3 border-0 shadow-sm bg-white">
+            <small class="text-muted text-uppercase fw-bold">Absence Alerts</small>
+            <div class="fs-2 fw-bold text-primary">
+                {{ category_counts.get('Absence Alert', 0) }}
+            </div>
+            <small class="text-muted">Daily lecture absences</small>
+        </div>
+    </div>
+</div>
+
+<!-- ALERTS AUDIT FEED -->
+<div class="card border-0 shadow-sm p-4 mb-4">
+    <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+        <div>
+            <h6 class="fw-bold text-dark mb-0">System Notification Audit Log</h6>
+            <small class="text-muted">Live trail of automated alerts dispatched to students and faculty</small>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{{ url_for('admin.notifications') }}" class="btn btn-sm {% if not selected_category %}btn-primary{% else %}btn-outline-secondary{% endif %} rounded-pill px-3">
+                All Alerts
+            </a>
+            <a href="{{ url_for('admin.notifications', category='Low Attendance Warning') }}" class="btn btn-sm {% if selected_category == 'Low Attendance Warning' %}btn-danger{% else %}btn-outline-danger{% endif %} rounded-pill px-3">
+                Low Attendance
+            </a>
+            <a href="{{ url_for('admin.notifications', category='Academic Risk') }}" class="btn btn-sm {% if selected_category == 'Academic Risk' %}btn-warning text-dark{% else %}btn-outline-warning text-dark{% endif %} rounded-pill px-3">
+                Academic Risk
+            </a>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Recipient</th>
+                    <th>Role</th>
+                    <th>Category</th>
+                    <th>Alert Content</th>
+                    <th>Priority</th>
+                    <th>Delivery</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in alerts %}
+                <tr>
+                    <td class="small">{{ a.created_at[:16] if a.created_at else '' }}</td>
+                    <td>
+                        <strong>{{ a.user_name }}</strong>
+                        {% if a.student_code %}
+                            <div class="font-monospace small text-muted">{{ a.student_code }} ({{ a.class_code }})</div>
+                        {% endif %}
+                    </td>
+                    <td><span class="badge bg-light text-secondary border">{{ a.role }}</span></td>
+                    <td>
+                        <span class="badge {% if a.category == 'Low Attendance Warning' %}bg-danger-subtle text-danger{% elif a.category == 'Academic Risk' %}bg-warning-subtle text-warning{% elif a.category == 'Absence Alert' %}bg-info-subtle text-info{% else %}bg-secondary-subtle text-secondary{% endif %}">
+                            {{ a.category }}
+                        </span>
+                    </td>
+                    <td style="max-width: 360px;">
+                        <strong class="d-block small text-dark">{{ a.title }}</strong>
+                        <p class="small text-muted mb-0">{{ a.message }}</p>
+                    </td>
+                    <td>
+                        <span class="badge {% if a.priority == 'High' %}bg-danger{% elif a.priority == 'Medium' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                            {{ a.priority }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle">
+                            <i class="bi bi-check2-circle me-1"></i>Delivered
+                        </span>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="text-center py-4 text-muted">
+                        No notifications found matching filter.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}Smart Academic Notification Center{% endblock %}
+{% block page_title %}Academic Notification Center{% endblock %}
+{% block page_subtitle %}Centralized Academic Risk Alerts, Attendance Threshold Warnings & Mentoring Notices{% endblock %}
+
+{% block content %}
+<!-- NOTIFICATION CONTROLS & STATS -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card p-3 border-0 shadow-sm bg-white">
+            <small class="text-muted text-uppercase fw-bold">Total Notifications</small>
+            <div class="fs-2 fw-bold text-dark">{{ all_notifs|length }}</div>
+            <small class="text-muted">Lifetime log</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3 border-0 shadow-sm bg-white">
+            <small class="text-muted text-uppercase fw-bold">Unread Alerts</small>
+            <div class="fs-2 fw-bold text-danger">{{ unread_count }}</div>
+            <small class="text-danger">Action required</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3 border-0 shadow-sm bg-white">
+            <small class="text-muted text-uppercase fw-bold">Attendance Alerts</small>
+            <div class="fs-2 fw-bold text-warning">{{ attendance_notifs|length }}</div>
+            <small class="text-muted">Absence & threshold notices</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3 border-0 shadow-sm bg-white">
+            <small class="text-muted text-uppercase fw-bold">Mentoring Tasks</small>
+            <div class="fs-2 fw-bold text-primary">{{ task_notifs|length }}</div>
+            <small class="text-muted">Faculty assigned actions</small>
+        </div>
+    </div>
+</div>
+
+<!-- CATEGORY TABS & NOTIFICATIONS FEED -->
+<div class="card border-0 shadow-sm p-4 mb-4">
+    <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2 border-bottom pb-3">
+        <ul class="nav nav-pills gap-2" id="notifCategoryTabs" role="tablist">
+            <li class="nav-item">
+                <button class="nav-link active rounded-pill px-3 py-2 small fw-semibold" data-bs-toggle="pill" data-bs-target="#tab-all" type="button">
+                    All ({{ all_notifs|length }})
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link rounded-pill px-3 py-2 small fw-semibold" data-bs-toggle="pill" data-bs-target="#tab-att" type="button">
+                    <i class="bi bi-clock-history me-1"></i>Attendance ({{ attendance_notifs|length }})
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link rounded-pill px-3 py-2 small fw-semibold" data-bs-toggle="pill" data-bs-target="#tab-acad" type="button">
+                    <i class="bi bi-graph-down me-1"></i>Academic & Marks ({{ academic_notifs|length }})
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link rounded-pill px-3 py-2 small fw-semibold" data-bs-toggle="pill" data-bs-target="#tab-tasks" type="button">
+                    <i class="bi bi-person-workspace me-1"></i>Mentoring Tasks ({{ task_notifs|length }})
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link rounded-pill px-3 py-2 small fw-semibold" data-bs-toggle="pill" data-bs-target="#tab-milestones" type="button">
+                    <i class="bi bi-trophy me-1"></i>Milestones ({{ milestone_notifs|length }})
+                </button>
+            </li>
+        </ul>
+
+        {% if unread_count > 0 %}
+        <form action="{{ url_for('student.mark_all_notifications_read') }}" method="POST">
+            <button type="submit" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+                <i class="bi bi-check2-all me-1"></i>Mark All Read
+            </button>
+        </form>
+        {% endif %}
+    </div>
+
+    <div class="tab-content" id="notifTabsContent">
+        <!-- ALL TAB -->
+        <div class="tab-pane fade show active" id="tab-all" role="tabpanel">
+            {% with list = all_notifs %}
+                {% include "student/_notif_list.html" %}
+            {% endwith %}
+        </div>
+
+        <!-- ATTENDANCE TAB -->
+        <div class="tab-pane fade" id="tab-att" role="tabpanel">
+            {% with list = attendance_notifs %}
+                {% include "student/_notif_list.html" %}
+            {% endwith %}
+        </div>
+
+        <!-- ACADEMIC TAB -->
+        <div class="tab-pane fade" id="tab-acad" role="tabpanel">
+            {% with list = academic_notifs %}
+                {% include "student/_notif_list.html" %}
+            {% endwith %}
+        </div>
+
+        <!-- TASKS TAB -->
+        <div class="tab-pane fade" id="tab-tasks" role="tabpanel">
+            {% with list = task_notifs %}
+                {% include "student/_notif_list.html" %}
+            {% endwith %}
+        </div>
+
+        <!-- MILESTONES TAB -->
+        <div class="tab-pane fade" id="tab-milestones" role="tabpanel">
+            {% with list = milestone_notifs %}
+                {% include "student/_notif_list.html" %}
+            {% endwith %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.btn-mark-read').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const notifId = this.getAttribute('data-id');
+            const row = document.getElementById('notif-row-' + notifId);
+
+            fetch(`/student/notifications/read/${notifId}`, {
+                method: 'POST'
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    if (row) {
+                        row.classList.remove('bg-light');
+                        const unreadDot = row.querySelector('.unread-dot');
+                        if (unreadDot) unreadDot.remove();
+                    }
+                    this.remove();
+                }
+            })
+            .catch(err => console.error(err));
+        });
+    });
+});
+</script>
+{% endblock %}

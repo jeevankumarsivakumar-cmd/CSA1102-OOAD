@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}My Academic Marks{% endblock %}
+{% block page_title %}Academic Gradebook{% endblock %}
+{% block page_subtitle %}Internal Examination Scores & Continuous Evaluation Records{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card p-3 text-center bg-white border">
+            <small class="text-muted text-uppercase fw-bold">Overall Average Score</small>
+            <div class="fs-2 fw-bold text-primary">{{ avg_marks }}%</div>
+            <small class="text-muted">Across all completed assessments</small>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-3 text-center bg-white border">
+            <small class="text-muted text-uppercase fw-bold">Assessments Logged</small>
+            <div class="fs-2 fw-bold text-dark">{{ all_marks|length }}</div>
+            <small class="text-muted">Tests and continuous evaluations</small>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-3 text-center bg-white border">
+            <small class="text-muted text-uppercase fw-bold">Previous GPA</small>
+            <div class="fs-2 fw-bold text-success">{{ student.previous_gpa }}</div>
+            <small class="text-muted">Scale of 10.0</small>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-transparent border-0 pt-3 px-4">
+        <h6 class="fw-bold mb-0 text-dark">Continuous Evaluation Score Sheet</h6>
+        <small class="text-muted">Breakdown of tests, assignments, and internal exams</small>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-custom align-middle">
+            <thead>
+                <tr>
+                    <th>Subject Code</th>
+                    <th>Subject Name</th>
+                    <th>Credits</th>
+                    <th>Assessment Type</th>
+                    <th>Score Obtained</th>
+                    <th>Max Marks</th>
+                    <th>Percentage</th>
+                    <th>Evaluated By</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in all_marks %}
+                {% set pct = (m.marks_obtained / m.max_marks) * 100 %}
+                <tr>
+                    <td><span class="fw-bold font-monospace text-dark">{{ m.subject_code }}</span></td>
+                    <td><div class="fw-semibold text-dark">{{ m.subject_name }}</div></td>
+                    <td><span class="badge bg-light text-dark border">{{ m.credits }}</span></td>
+                    <td><span class="badge bg-secondary-subtle text-dark border">{{ m.exam_type }}</span></td>
+                    <td><strong class="text-dark">{{ m.marks_obtained }}</strong></td>
+                    <td>{{ m.max_marks }}</td>
+                    <td>
+                        <span class="fw-bold {% if pct < 50 %}text-danger{% elif pct < 75 %}text-warning{% else %}text-success{% endif %}">
+                            {{ pct|round(1) }}%
+                        </span>
+                    </td>
+                    <td><small class="text-muted">{{ m.faculty_name }}</small></td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" class="text-center text-muted py-5">No academic marks recorded yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
